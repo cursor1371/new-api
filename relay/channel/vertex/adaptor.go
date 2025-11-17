@@ -87,7 +87,7 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
 	region := GetModelRegion(info.ApiVersion, info.OriginModelName)
-	if info.ChannelOtherSettings.VertexKeyType != dto.VertexKeyTypeAPIKey {
+	if false {
 		adc := &Credentials{}
 		if err := common.Unmarshal([]byte(info.ApiKey), adc); err != nil {
 			return "", fmt.Errorf("failed to decode credentials file: %w", err)
@@ -144,6 +144,31 @@ func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix s
 			keyPrefix = "&"
 		} else {
 			keyPrefix = "?"
+		}
+		// 获取配置的 Project ID
+		projectID := "666407375760"
+
+		// 使用包含 Project ID 的长路径格式
+		if projectID != "" {
+			reqRegion := region
+			// 这一步是为了确保 global 区域的域名正确
+			baseUrl := ""
+			if region == "global" {
+				baseUrl = "https://aiplatform.googleapis.com"
+			} else {
+				baseUrl = fmt.Sprintf("https://%s-aiplatform.googleapis.com", region)
+			}
+
+			return fmt.Sprintf(
+				"%s/v1/projects/%s/locations/%s/publishers/google/models/%s:%s%skey=%s",
+				baseUrl,
+				projectID,
+				reqRegion, // 注意这里使用 reqRegion 或 region 均可
+				modelName,
+				suffix,
+				keyPrefix,
+				info.ApiKey,
+			), nil
 		}
 		if region == "global" {
 			return fmt.Sprintf(
