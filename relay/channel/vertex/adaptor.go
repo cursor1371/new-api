@@ -180,7 +180,23 @@ func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix s
 		} else {
 			keyPrefix = "?"
 		}
+
+		// 获取配置的 Project ID
+		projectID := info.ChannelOtherSettings.VertexProjectID
+
 		if region == "global" {
+			if projectID != "" {
+				// Express Mode: 包含 projects/{id}/locations/global
+				return fmt.Sprintf(
+					"https://aiplatform.googleapis.com/v1/projects/%s/locations/global/publishers/google/models/%s:%s%skey=%s",
+					projectID,
+					modelName,
+					suffix,
+					keyPrefix,
+					info.ApiKey,
+				), nil
+			}
+			// 默认 Publisher 模式
 			return fmt.Sprintf(
 				"https://aiplatform.googleapis.com/v1/publishers/google/models/%s:%s%skey=%s",
 				modelName,
@@ -189,6 +205,20 @@ func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix s
 				info.ApiKey,
 			), nil
 		} else {
+			if projectID != "" {
+				// Express Mode: 包含 projects/{id}/locations/{region}
+				return fmt.Sprintf(
+					"https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s%skey=%s",
+					region,
+					projectID,
+					region,
+					modelName,
+					suffix,
+					keyPrefix,
+					info.ApiKey,
+				), nil
+			}
+			// 默认 Publisher 模式
 			return fmt.Sprintf(
 				"https://%s-aiplatform.googleapis.com/v1/publishers/google/models/%s:%s%skey=%s",
 				region,
